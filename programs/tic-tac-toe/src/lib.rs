@@ -13,6 +13,17 @@ pub mod tic_tac_toe {
             .game
             .start([ctx.accounts.player_one.key(), player_two])
     }
+
+    pub fn play(ctx: Context<Play>, tile: Tile) -> Result<()> {
+        let game = &mut ctx.accounts.game;
+
+        require_keys_eq!(
+            game.current_player(),
+            ctx.accounts.player.key(),
+            TicTacToeError::NotPlayersTurn
+        );
+        game.play(tile)
+    }
 }
 
 #[derive(
@@ -139,6 +150,8 @@ pub enum TicTacToeError {
     TileOutOfBounds,
     #[msg("The tile is already set")]
     TileAlreadySet,
+    #[msg("It is not your turn")]
+    NotPlayersTurn,
 }
 
 #[derive(Accounts)]
@@ -148,4 +161,11 @@ pub struct SetupGame<'info> {
     #[account(mut)]
     pub player_one: Signer<'info>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct Play<'info> {
+    #[account(mut)]
+    pub game: Account<'info, Game>,
+    pub player: Signer<'info>,
 }
